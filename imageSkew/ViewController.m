@@ -15,12 +15,75 @@
 {
     UIImageView *mainImg;
     UISlider *sliderTransform;
+    
+    UISlider *sliderAnchorX;
+    
+    UISlider *sliderAnchorY;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    [self buildLayOut];
+    
+    [self setAnchor];
+    
+    
+    //[self setRotationAxis];
+    
+    // Gắn sự kiện khi thay đổi giá trị của slider
+    [sliderTransform addTarget:self action:@selector(onRotation) forControlEvents:UIControlEventValueChanged];
+}
+
+- (void) buildLayOut {
+    // Lấy kích thước
+    float w = self.view.bounds.size.width;
+    float h = self.view.bounds.size.height;
+    
+    //Tạo slider rotation
+    sliderTransform = [UISlider new];
+    sliderTransform.value = 0;
+    sliderTransform.frame = CGRectMake(8, h - sliderTransform.bounds.size.height - 5, w - 16, sliderTransform.bounds.size.height);
+    
+    [self.view addSubview:sliderTransform];
+    
+    
+    //Tạo slider anchor x
+    sliderAnchorX = [UISlider new];
+    sliderAnchorX.value = 0.5;
+    sliderAnchorX.frame = CGRectMake(8 + sliderTransform.bounds.size.height + 10 , h - sliderTransform.bounds.size.height - 5 - sliderAnchorX.bounds.size.height - 5, w - 16 - 10 - sliderAnchorX.bounds.size.height, sliderTransform.bounds.size.height);
+    
+    [self.view addSubview:sliderAnchorX];
+    
+    
+    float imgHeight= h - 26 - sliderTransform.bounds.size.height - sliderAnchorX.bounds.size.height - 10 - 10;
+    
+    //Tạo slider anchor y
+    sliderAnchorY = [UISlider new];
+    sliderAnchorY.value = 0.5;
+    sliderAnchorY.transform = CGAffineTransformMakeRotation(M_PI_2);
+    sliderAnchorY.frame = CGRectMake(8, 26, sliderAnchorY.bounds.size.height, imgHeight);
+    
+    [self.view addSubview:sliderAnchorY];
+    
+    
+    // Tạo image
+    mainImg = [UIImageView new];
+    mainImg.frame = CGRectMake(8 + sliderTransform.bounds.size.height + 10 , 26, w - 16 - sliderTransform.bounds.size.height - 10, imgHeight);
+    [mainImg setImage:[UIImage imageNamed:@"Main"]];
+    
+    [self.view addSubview:mainImg];
+    
+    
+    [sliderAnchorX addTarget:self action:@selector(setAnchor) forControlEvents:UIControlEventValueChanged];
+    
+    [sliderAnchorY addTarget:self action:@selector(setAnchor) forControlEvents:UIControlEventValueChanged];
+    
+}
+
+
+- (void) buildLayOutWithoutAnchorMove {
     // Lấy kích thước
     float w = self.view.bounds.size.width;
     float h = self.view.bounds.size.height;
@@ -40,12 +103,14 @@
     
     [self.view addSubview:mainImg];
     
-    [self setRotationAxis];
-    
-    // Gắn sự kiện khi thay đổi giá trị của slider
-    [sliderTransform addTarget:self action:@selector(onRotation) forControlEvents:UIControlEventValueChanged];
 }
 
+- (void) setAnchor
+{
+    mainImg.layer.anchorPoint = CGPointMake( sliderAnchorX.value, sliderAnchorY.value );
+    
+    NSLog(@"x=%f, y=%f",mainImg.layer.anchorPoint.x, mainImg.layer.anchorPoint.y);
+}
 
 // Hàm thiết lập trục xoay
 - (void) setRotationAxis {
@@ -81,7 +146,8 @@
     
     // Hàm CATransform3DRotate sẽ tạo ra 1 ma trận rotation thực hiện xoay đối tượng 1 góc M_PI * sliderTransform.value/2.0 theo phương của vector V (0, 1, 0) dễ thấy vector này x = z = 0 và y = 1 là phương của trục OY. Sau khi tạo ra ma trận rotation nó sẽ tự nhân với matrix để kết hợp hiệu ứng translation ta gán ở trên với hiệu ứng xoay
     // Lưu ý ở đây ta chỉ xoay từ 0 -> PI/2 vì từ PI/2 -> PI nó âm sang viền phải bên ngoài màn hình và về thị giác ta không thấy gì
-    matrix = CATransform3DRotate( matrix, M_PI * sliderTransform.value/2.0, 0.0, 1.0, 0.0 );
+    //matrix = CATransform3DRotate( matrix, M_PI * sliderTransform.value/2.0, 0.0, 1.0, 0.0 );
+    matrix = CATransform3DRotate( matrix, M_PI * sliderTransform.value, 0.0, 1.0, 0.0 );
     
     
     // Đã có ma trận tạo hiệu ứng -> gán vào đối tượng để thực thi
